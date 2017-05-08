@@ -12,7 +12,17 @@ var App = {
   view: function() {
     return m('.container', [
       m('h1', 'Arghh..'),
-      m(Foo, { options: options })
+
+      m(Foo, { options: options }),
+
+      m('select', { style: {marginTop: '40px'} }, options.map(option => m('option', {
+        value: option.value
+      }, option.value))),
+
+
+      m('select', { style: {marginTop: '40px'} }, options.map(option => m('option', {
+        value: option.value
+      }, option.value)))
     ])
   }
 };

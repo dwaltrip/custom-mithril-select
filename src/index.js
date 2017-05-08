@@ -10,7 +10,10 @@ export default {
   close:  function() { this.isOpen = false; },
 
   renderOption: function(option) {
-    return m('.option', option.name || option.value);
+    var isSelected = option.value === this.selectedOption.value;
+    return m('.option', {
+      class: [isSelected ? 'is-selected' : '']
+    }, option.name || option.value);
   },
 
   view: function(vnode) {
@@ -19,11 +22,13 @@ export default {
 
     return m('.vdom-select', {
       tabindex: 0,
+      class: [this.isOpen ? 'is-open' :  ''],
       onclick: ()=> this.open()
     }, [
-      m('.selected-option', this.selectedOption.name || this.selectedOption.value),
+      m('.opener', this.selectedOption.name || this.selectedOption.value),
 
-      this.isOpen && m('.option-selection-panel', options.map(option => this.renderOption(option)))
+      // this.isOpen && m('.option-selection-panel', options.map(option => this.renderOption(option)))
+      m('.option-selection-panel', options.map(option => this.renderOption(option)))
     ]);
   }
 };
