@@ -1,0 +1,83 @@
+
+.vdom-select {
+  display: inline-block;
+  font-size: 11px;
+  font-family: system-ui, -apple-system;
+  border-radius: 3px;
+}
+
+.vdom-select.is-open .opener { visibility: hidden; }
+.vdom-select.is-open .option-selection-panel  { display: block; }
+
+.vdom-select:hover, .vdom-select .opener:hover {
+  cursor: default;
+}
+
+.vdom-select:focus {
+  outline: none;
+}
+
+.vdom-select:focus .opener {
+  box-shadow: 0px 0px 1px 2px rgb(96, 172, 253);
+  border: none;
+}
+
+.vdom-select .option-selection-panel {
+  display: none;
+  position: absolute;
+  width: auto;
+  padding: 4px 0;
+  top: -5px;
+  z-index: 1;
+  max-height: initial;
+  transition: none;
+
+  background-color: #eee;
+  border: 1px solid rgba(170,170,170,0.6);
+  box-shadow: 0px 1px 5px 1px rgba(0,0,0,0.3);
+  border-radius: 4px;
+}
+
+.vdom-select .opener {
+  position: relative;
+  background-color: white;
+  padding: 2px 6px;
+  padding-right: 2px;
+  border-radius: 3px;
+  border: 1px solid #aaa;
+  box-shadow: 0px 1px 0px 0px rgba(100, 100, 100, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  white-space: nowrap;
+}
+
+.vdom-select .opener:after {
+  content: '';
+  height: 12px;
+  width: 8px;
+  background: url(assets/dropdown-arrows.svg);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  margin-left: 5px;
+}
+
+.vdom-select .option {
+  padding: 2px 6px;
+  padding-left: 19px;
+  position: relative;
+  white-space: nowrap;
+}
+
+.vdom-select .option:hover,
+.vdom-select .option.has-focus {
+  background-color: #5c9bf9; /* mimic the mac osx blue for selected select options */
+  color: white;
+}
+
+.vdom-select .option.is-selected::before {
+  font-size: 9px;
+  position: absolute;
+  left: 6px;
+  top: 3px;
+}
