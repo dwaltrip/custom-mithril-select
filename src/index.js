@@ -1,5 +1,11 @@
 import m from 'mithril';
 
+const UP_KEY      = 38;
+const DOWN_KEY    = 40;
+const ESCAPE_KEY  = 27;
+const ENTER_KEY   = 13;
+
+// TODO: handle `onchange` handlers passed in as an `attr`
 export default {
   oninit: function({ attrs:{selectedOption, options} }) {
     this.selectedOption = selectedOption || options[0];
@@ -30,32 +36,99 @@ export default {
 
   open: function() {
     this.isOpen = true;
+    this.targetOption = this.selectedOption;
     document.addEventListener('mousedown', this.closePanelWithoutSideEffects, true);
   },
   close: function() {
     this.isOpen = false;
+    this.targetOption = null;
+    document.removeEventListener('mousedown', this.closePanelWithoutSideEffects, true);
+  },
+  selectOption: function(option) {
+    this.selectedOption = option;
+    this.close();
+    // TODO: fire off `onchange` event
+  },
+  // NOTE: This is currently only called on an `ENTER` keydown event
+  selectTargetedOption: function() {
+    this.selectedOption = this.targetOption;
+    this.close();
+    // TODO: fire off `onchange` event
   },
 
   renderOption: function(option) {
-    var isSelected = option.value === this.selectedOption.value;
+    var classes = [
+      option.value === this.selectedOption.value  ? 'is-selected' : '',
+      option.value === this.targetOption.value    ? 'is-target'   : ''
+    ].join(' ');
+    console.log('option --', option.value, '-- classes:', classes);
     return m('.option', {
-      class: [isSelected ? 'is-selected' : '']
+      key: option.value,
+      class: classes,
+      onclick: event => {
+        this.selectOption(option);
+        event.stopPropagation();
+      }
     }, option.name || option.value);
+  },
+
+  openViaArrowKeys: function(event) {
+    if (event.keyCode === UP_KEY || event.keyCode === DOWN_KEY) {
+      this.open();
+    } else {
+      event.redraw = false;
+    }
+  },
+
+  handleKeydownInPanel: function(event, options) {
+    console.log('handleKeydownInPanel')
+    switch (event.keyCode) {
+      case UP_KEY:      this.targetPrevOption(options); break;
+      case DOWN_KEY:    this.targetNextOption(options); break;
+      case ENTER_KEY:   this.selectTargetedOption();    break;
+      case ESCAPE_KEY:  this.close();                   break;
+      default:
+        event.redraw = false; break;
+    }
+  },
+
+  targetPrevOption: function(options) {
+    var index = options.indexOf(this.targetOption);
+    // TODO: what happens if component user changes the passed options unexpectedly?
+    if (index < 0) { throw new Error('targetOption not found in passed options'); }
+    console.log('targetPrevOption');
+    if (index > 0) {
+      console.log('targetPrevOption -- inside if');
+      this.targetOption = options[index - 1];
+    }
+  },
+  targetNextOption: function(options) {
+    var index = options.indexOf(this.targetOption);
+    // TODO: what happens if component user changes the passed options unexpectedly?
+    if (index < 0) { throw new Error('targetOption not found in passed options'); }
+    console.log('targetNextOption');
+    if (index + 1 < options.length) {
+      console.log('targetNextOption -- inside if');
+      this.targetOption = options[index + 1];
+    }
   },
 
   view: function(vnode) {
     var options = vnode.attrs.options;
-    var classes = '';
+    var open = ()=> this.open();
 
     return m('.vdom-select', {
       tabindex: 0,
       class: [this.isOpen ? 'is-open' :  ''],
-      onclick: ()=> this.open()
+      onclick: ()=> this.open(),
+      onkeydown: (this.isOpen ?
+        (event => this.handleKeydownInPanel(event, options)) :
+        (event => this.openViaArrowKeys(event))
+      )
     }, [
       m('.opener', this.selectedOption.name || this.selectedOption.value),
 
-      // this.isOpen && m('.option-selection-panel', options.map(option => this.renderOption(option)))
-      m('.option-selection-panel', options.map(option => this.renderOption(option)))
+      this.isOpen && m('.option-selection-panel', options.map(option => this.renderOption(option)))
     ]);
   }
 };
