@@ -9,22 +9,12 @@
   opacity: .333;
 }
 .vdom-select .opener {
-  background-color: #ccc;
-  padding: 0.5em;
-  display: block;
   cursor: pointer;
   width: 100%;
 }
 
 .option-selection-panel {
-  max-height: 0;
-  transition: max-height .5s ease-out, overflow-y 0.1s 0.5s;
   overflow: hidden;
-  background-color: #e9e9e9;
-  position: absolute;
-  top: 100%;
-  z-index: 1;
-  width: 100%;
 }
 .vdom-select.is-open .option-selection-panel {
   max-height: 10.7em;
@@ -40,9 +30,6 @@
   border: none;
 }
 
-.vdom-select .option {
-  padding: 0.5em;
-}
 .vdom-select .option.is-selected::before {
   content: "✔";
   padding-right: 0.5em;
