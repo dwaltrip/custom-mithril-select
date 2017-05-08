@@ -69,7 +69,6 @@
   white-space: nowrap;
 }
 
-.vdom-select .option:hover,
 .vdom-select .option.is-target {
   background-color: #5c9bf9; /* mimic the mac osx blue for selected select options */
   color: white;

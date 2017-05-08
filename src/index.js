@@ -4,25 +4,24 @@ const UP_KEY      = 38;
 const DOWN_KEY    = 40;
 const ESCAPE_KEY  = 27;
 const ENTER_KEY   = 13;
+const SPACE_KEY   = 32;
+const TAB_KEY     = 9;
 
-// TODO: handle `onchange` handlers passed in as an `attr`
 export default {
-  oninit: function({ attrs:{selectedOption, options} }) {
-    this.selectedOption = selectedOption || options[0];
+  oninit: function(vnode) {
+    this.updateState(vnode.attrs);
     this.isOpen = false;
 
     this.closePanelWithoutSideEffects = event => {
       // Only if the mousedown is outside the container
-      console.log('closePanelWithoutSideEffects')
       if (this.isOpen && !this.containerElement.contains(event.target)) {
-        console.log('closePanelWithoutSideEffects -- inside if')
         this.close();
         // prevent the mousedown from affecting any other elements
         blockEvent(event);
         // This will fire immediately, as 'mousedown' is before 'click'
-        addOneTimeHandler(document, 'click', blockEvent, true);
         // Set useCapture=true to catch the event before any other existing click handlers
         // The mousedown/click events should only close the panel, and not affect other elements
+        addOneTimeHandler(document, 'click', blockEvent, true);
         m.redraw();
       }
     }
@@ -30,8 +29,24 @@ export default {
   oncreate: function(vnode) {
     this.containerElement = vnode.dom;
   },
-  onRemove: function() {
+  onupdate: function(vnode) {
+    this.updateState(vnode.attrs);
+  },
+  onremove: function() {
     document.removeEventListener('mousedown', this.closePanelWithoutSideEffects, true);
+  },
+
+  updateState: function({ selectedOption, options, onchange }) {
+    this.selectedOption = selectedOption || this.selectedOption || options[0] || undefined;
+    this.externalOnChange = onchange || null;
+    var values = options.map(option => option.value);
+    if (this.targetOption) {
+      if (values.indexOf(this.targetOption.value) < 0) {
+        this.targetOption = null;
+      } else {
+        this.targetOption = options.find(option => option.value === this.targetOption.value);
+      }
+    }
   },
 
   open: function() {
@@ -44,49 +59,62 @@ export default {
     this.targetOption = null;
     document.removeEventListener('mousedown', this.closePanelWithoutSideEffects, true);
   },
-  selectOption: function(option) {
+  setSelectedOption: function(option) {
+    var prevSelectedOption = this.selectedOption;
     this.selectedOption = option;
-    this.close();
-    // TODO: fire off `onchange` event
+    if (prevSelectedOption && (prevSelectedOption.value !== option.value)) {
+      this.callChangeHandlers();
+    }
   },
-  // NOTE: This is currently only called on an `ENTER` keydown event
-  selectTargetedOption: function() {
-    this.selectedOption = this.targetOption;
+  callChangeHandlers: function() {
+    if (this.externalOnChange) {
+      this.externalOnChange(this);
+    }
+  },
+
+  selectOption: function(option) {
+    this.setSelectedOption(option);
     this.close();
-    // TODO: fire off `onchange` event
+  },
+  // NOTE: This is currently only called if keyboard is used to select an option
+  selectTargetedOption: function() {
+    this.setSelectedOption(this.targetOption);
+    this.close();
   },
 
   renderOption: function(option) {
-    var classes = [
-      option.value === this.selectedOption.value  ? 'is-selected' : '',
-      option.value === this.targetOption.value    ? 'is-target'   : ''
-    ].join(' ');
-    console.log('option --', option.value, '-- classes:', classes);
+    var isSelected =                      option.value === this.selectedOption.value;
+    var isTarget   = this.targetOption && option.value === this.targetOption.value;
     return m('.option', {
       key: option.value,
-      class: classes,
+      class: [
+        isSelected ? 'is-selected' : '',
+        isTarget   ? 'is-target'   : ''
+      ].join(' '),
       onclick: event => {
         this.selectOption(option);
         event.stopPropagation();
-      }
+      },
+      onmouseenter: ()=> { this.targetOption = option; }
     }, option.name || option.value);
   },
 
-  openViaArrowKeys: function(event) {
-    if (event.keyCode === UP_KEY || event.keyCode === DOWN_KEY) {
+  openViaKeyboard: function(event) {
+    if ([UP_KEY, DOWN_KEY, SPACE_KEY].indexOf(event.keyCode) > -1) {
       this.open();
     } else {
       event.redraw = false;
     }
   },
-
   handleKeydownInPanel: function(event, options) {
-    console.log('handleKeydownInPanel')
     switch (event.keyCode) {
       case UP_KEY:      this.targetPrevOption(options); break;
       case DOWN_KEY:    this.targetNextOption(options); break;
-      case ENTER_KEY:   this.selectTargetedOption();    break;
+      case ENTER_KEY:
+      case SPACE_KEY:   this.selectTargetedOption();    break;
       case ESCAPE_KEY:  this.close();                   break;
+      // You can't tab while a <select> is open
+      case TAB_KEY:     blockEvent(event);              break;
       default:
         event.redraw = false; break;
     }
@@ -96,9 +124,7 @@ export default {
     var index = options.indexOf(this.targetOption);
     // TODO: what happens if component user changes the passed options unexpectedly?
     if (index < 0) { throw new Error('targetOption not found in passed options'); }
-    console.log('targetPrevOption');
     if (index > 0) {
-      console.log('targetPrevOption -- inside if');
       this.targetOption = options[index - 1];
     }
   },
@@ -106,29 +132,26 @@ export default {
     var index = options.indexOf(this.targetOption);
     // TODO: what happens if component user changes the passed options unexpectedly?
     if (index < 0) { throw new Error('targetOption not found in passed options'); }
-    console.log('targetNextOption');
     if (index + 1 < options.length) {
-      console.log('targetNextOption -- inside if');
       this.targetOption = options[index + 1];
     }
   },
 
-  view: function(vnode) {
-    var options = vnode.attrs.options;
-    var open = ()=> this.open();
-
+  view: function({ attrs:{options} }) {
     return m('.vdom-select', {
-      tabindex: 0,
       class: [this.isOpen ? 'is-open' :  ''],
       onclick: ()=> this.open(),
       onkeydown: (this.isOpen ?
         (event => this.handleKeydownInPanel(event, options)) :
-        (event => this.openViaArrowKeys(event))
-      )
+        (event => this.openViaKeyboard(event))
+      ),
+      tabindex: 0
     }, [
       m('.opener', this.selectedOption.name || this.selectedOption.value),
-
-      this.isOpen && m('.option-selection-panel', options.map(option => this.renderOption(option)))
+      this.isOpen &&
+        m('.option-selection-panel', {
+          onmouseleave: ()=> { this.targetOption = null; },
+        }, options.map(option => this.renderOption(option)))
     ]);
   }
 };
