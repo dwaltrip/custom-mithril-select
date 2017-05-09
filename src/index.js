@@ -82,23 +82,6 @@ export default {
     this.close();
   },
 
-  renderOption: function(option) {
-    var isSelected =                      option.value === this.selectedOption.value;
-    var isTarget   = this.targetOption && option.value === this.targetOption.value;
-    return m('.option', {
-      key: option.value,
-      class: [
-        isSelected ? 'is-selected' : '',
-        isTarget   ? 'is-target'   : ''
-      ].join(' '),
-      onclick: event => {
-        this.selectOption(option);
-        event.stopPropagation();
-      },
-      onmouseenter: ()=> { this.targetOption = option; }
-    }, option.name || option.value);
-  },
-
   openViaKeyboard: function(event) {
     if ([UP_KEY, DOWN_KEY, SPACE_KEY].indexOf(event.keyCode) > -1) {
       this.open();
@@ -135,6 +118,23 @@ export default {
     if (index + 1 < options.length) {
       this.targetOption = options[index + 1];
     }
+  },
+
+  renderOption: function(option) {
+    var isSelected =                      option.value === this.selectedOption.value;
+    var isTarget   = this.targetOption && option.value === this.targetOption.value;
+    return m('.option', {
+      key: option.value,
+      class: [
+        isSelected ? 'is-selected' : '',
+        isTarget   ? 'is-target'   : ''
+      ].join(' '),
+      onclick: event => {
+        this.selectOption(option);
+        event.stopPropagation();
+      },
+      onmouseenter: ()=> { this.targetOption = option; }
+    }, option.name || option.value);
   },
 
   view: function({ attrs:{options} }) {
