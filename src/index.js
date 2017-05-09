@@ -72,7 +72,7 @@ export default {
   setSelectedOption: function(option) {
     var prevSelectedOption = this.selectedOption;
     this.selectedOption = option;
-    if (prevSelectedOption && (prevSelectedOption.value !== option.value)) {
+    if (!prevSelectedOption || (prevSelectedOption.value !== option.value)) {
       this.callChangeHandlers();
     }
   },
@@ -101,13 +101,13 @@ export default {
   },
   handleKeydownInPanel: function(event, options) {
     switch (event.keyCode) {
-      case UP_KEY:      this.targetPrevOption(options); break;
-      case DOWN_KEY:    this.targetNextOption(options); break;
-      case ENTER_KEY:
-      case SPACE_KEY:   this.selectTargetedOption();    break;
-      case ESCAPE_KEY:  this.close();                   break;
+      case UP_KEY     : this.targetPrevOption(options); break;
+      case DOWN_KEY   : this.targetNextOption(options); break;
+      case ENTER_KEY  :
+      case SPACE_KEY  : this.selectTargetedOption();    break;
+      case ESCAPE_KEY : this.close();                   break;
       // You can't tab while a <select> is open
-      case TAB_KEY:     blockEvent(event);              break;
+      case TAB_KEY    : blockEvent(event);              break;
       default:
         event.redraw = false; break;
     }
@@ -115,7 +115,6 @@ export default {
 
   targetPrevOption: function(options) {
     var index = options.indexOf(this.targetOption);
-    // TODO: what happens if component user changes the passed options unexpectedly?
     if (index < 0) { throw new Error('targetOption not found in passed options'); }
     if (index > 0) {
       this.targetOption = options[index - 1];
@@ -123,7 +122,6 @@ export default {
   },
   targetNextOption: function(options) {
     var index = options.indexOf(this.targetOption);
-    // TODO: what happens if component user changes the passed options unexpectedly?
     if (index < 0) { throw new Error('targetOption not found in passed options'); }
     if (index + 1 < options.length) {
       this.targetOption = options[index + 1];
@@ -152,7 +150,7 @@ export default {
 
   view: function({ attrs:{options} }) {
     return m('.vdom-select', {
-      class: [this.isOpen ? 'is-open' :  ''],
+      class: this.isOpen ? 'is-open' : null,
       onclick: ()=> this.open(),
       onkeydown: (this.isOpen ?
         (event => this.handleKeydownInPanel(event, options)) :
