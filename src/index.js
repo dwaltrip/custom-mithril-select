@@ -15,7 +15,7 @@ export default {
 
     this.closePanelWithoutSideEffects = event => {
       // Only if the mousedown is outside the container
-      if (this.isOpen && !this.containerElement.contains(event.target)) {
+      if (this.isOpen && !this.container.contains(event.target)) {
         this.close();
         // prevent the mousedown from affecting any other elements
         blockEvent(event);
@@ -28,7 +28,7 @@ export default {
     };
   },
   oncreate: function(vnode) {
-    this.containerElement = vnode.dom;
+    this.container = vnode.dom;
   },
   onbeforeupdate: function(vnode) {
     this.updateState(vnode.attrs);
@@ -44,10 +44,10 @@ export default {
     this.selectedOption = (
       optionWithGivenValue || selectedOption || this.selectedOption || options[0] || undefined
     );
-    this.externalOnChange = onchange || null;
+    this.onchange = onchange || null;
 
-    var values = options.map(option => option.value);
     if (this.targetOption) {
+      var values = options.map(option => option.value);
       if (values.indexOf(this.targetOption.value) < 0) {
         this.targetOption = null;
       } else {
@@ -80,8 +80,8 @@ export default {
     }
   },
   callChangeHandlers: function() {
-    if (this.externalOnChange) {
-      this.externalOnChange(this);
+    if (this.onchange) {
+      this.onchange(this);
     }
   },
 
@@ -147,7 +147,7 @@ export default {
         this.selectOption(option);
       },
       onmouseenter: ()=> { this.targetOption = option; }
-    }, option.name || option.value);
+    }, option.label || option.value);
   },
 
   view: function({ attrs:{options} }) {
@@ -166,7 +166,7 @@ export default {
       ),
       tabindex:   this.isEnabled && 0,
     }, [
-      m('.opener', this.selectedOption.name || this.selectedOption.value),
+      m('.opener', this.selectedOption.label || this.selectedOption.value),
       this.isOpen &&
         m('.option-selection-panel', {
           onmouseleave: ()=> { this.targetOption = null; },
