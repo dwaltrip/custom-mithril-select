@@ -29,16 +29,22 @@ export default {
   oncreate: function(vnode) {
     this.containerElement = vnode.dom;
   },
-  onupdate: function(vnode) {
+  onbeforeupdate: function(vnode) {
     this.updateState(vnode.attrs);
   },
   onremove: function() {
     document.removeEventListener('mousedown', this.closePanelWithoutSideEffects, true);
   },
 
-  updateState: function({ selectedOption, options, onchange }) {
-    this.selectedOption = selectedOption || this.selectedOption || options[0] || undefined;
+  updateState: function({ options=[], value, selectedOption, onchange }) {
+    var optionWithGivenValue = value ? options.find(option => option.value === value) : null;
+    // the attrs `value` and `selectedOption` will overwrite the currently selected option.
+    // otherwise, use current internal value, the first option, or undefined (if `options` is empty)
+    this.selectedOption = (
+      optionWithGivenValue || selectedOption || this.selectedOption || options[0] || undefined
+    );
     this.externalOnChange = onchange || null;
+
     var values = options.map(option => option.value);
     if (this.targetOption) {
       if (values.indexOf(this.targetOption.value) < 0) {
@@ -47,6 +53,10 @@ export default {
         this.targetOption = options.find(option => option.value === this.targetOption.value);
       }
     }
+  },
+
+  get value() {
+    return this.selectedOption ? this.selectedOption.value : undefined;
   },
 
   open: function() {
