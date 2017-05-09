@@ -12,8 +12,8 @@ var options = [
 var extraOptions = [
   { value: 'extra extra' },
   { value: 'dan the man' },
-  { value: 'theez!!' },
-  { value: 'Buh-kawww' },
+  { value: 'Huzzah!' },
+  { value: 'onwards and upwards' }
 ];
 
 var wrapperDivCache = {}
@@ -25,7 +25,7 @@ function wrapperDiv(content) {
   }
   var wrapperNum = wrapperDivCache[key];
   return m('.wrapper-div', {
-    style: {border: '1px solid #ccc', padding: '15px', backgroundColor: '#aec'},
+    style: {border: '1px solid #ccc', margin: '10px', padding: '20px', backgroundColor: '#9ea'},
     // onclick: ()=> console.log('wrapper div', wrapperNum, '-- click'),
     // onmousedown: ()=> console.log('wrapper div', wrapperNum, '-- mouseDown'),
     // onmouseup: ()=> console.log('wrapper div', wrapperNum, '-- mouseUp')
@@ -67,14 +67,17 @@ var App = {
   },
 
   view: function() {
-    // console.log('App.options:', this.options.map(o => o.value).join(' -- '));
-
     return m('.container', [
-      m('h1', 'Arghh..'),
+      m('h1', 'Vdom Select'),
+
+      m('button', {
+        onclick: ()=> { this.isFooDisabled = !this.isFooDisabled; }
+      }, 'Toggle Foo'),
 
       wrapperDiv(m(Foo, {
         options: this.options,
         value: this.selectedValue(),
+        isDisabled: this.isFooDisabled,
         onchange: (select)=> {
           console.log('Foo Select -- onchange -- new value:', select.selectedOption.value)
           this.selectedValue(select.value);
@@ -82,14 +85,12 @@ var App = {
       })),
 
       wrapperDiv(m('select', {
-        style: {marginTop: '40px'},
         onchange: ()=> console.log('<select> 1 -- onchange')
       }, options.map(option => m('option', {
         value: option.value
       }, option.value)))),
 
       m('select', {
-        style: {marginTop: '40px'},
         onchange: ()=> console.log('<select> 2 -- onchange'),
       }, options.map(option => m('option', {
         value: option.value

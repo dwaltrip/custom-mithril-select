@@ -7,6 +7,7 @@ const ENTER_KEY   = 13;
 const SPACE_KEY   = 32;
 const TAB_KEY     = 9;
 
+// TODO: implement disabling/enabling of individual options
 export default {
   oninit: function(vnode) {
     this.updateState(vnode.attrs);
@@ -24,7 +25,7 @@ export default {
         addOneTimeHandler(document, 'click', blockEvent, true);
         m.redraw();
       }
-    }
+    };
   },
   oncreate: function(vnode) {
     this.containerElement = vnode.dom;
@@ -36,7 +37,7 @@ export default {
     document.removeEventListener('mousedown', this.closePanelWithoutSideEffects, true);
   },
 
-  updateState: function({ options=[], value, selectedOption, onchange }) {
+  updateState: function({ options=[], value, selectedOption, onchange, isDisabled=false }) {
     var optionWithGivenValue = value ? options.find(option => option.value === value) : null;
     // the attrs `value` and `selectedOption` will overwrite the currently selected option.
     // otherwise, use current internal value, the first option, or undefined (if `options` is empty)
@@ -53,11 +54,13 @@ export default {
         this.targetOption = options.find(option => option.value === this.targetOption.value);
       }
     }
+
+    this.isDisabled = !!isDisabled;
+    if (this.isDisabled && this.isOpen) { this.close(); }
   },
 
-  get value() {
-    return this.selectedOption ? this.selectedOption.value : undefined;
-  },
+  get value()     { return this.selectedOption ? this.selectedOption.value : undefined; },
+  get isEnabled() { return !this.isDisabled; },
 
   open: function() {
     this.isOpen = true;
@@ -86,7 +89,6 @@ export default {
     this.setSelectedOption(option);
     this.close();
   },
-  // NOTE: This is currently only called if keyboard is used to select an option
   selectTargetedOption: function() {
     this.setSelectedOption(this.targetOption);
     this.close();
@@ -106,7 +108,7 @@ export default {
       case ENTER_KEY  :
       case SPACE_KEY  : this.selectTargetedOption();    break;
       case ESCAPE_KEY : this.close();                   break;
-      // You can't tab while a <select> is open
+      // You can't tab while a <select> is open (well, not in Chrome/Safari. You can in Firefox)
       case TAB_KEY    : blockEvent(event);              break;
       default:
         event.redraw = false; break;
@@ -149,14 +151,20 @@ export default {
   },
 
   view: function({ attrs:{options} }) {
+    var classes = [
+      this.isOpen     ? 'is-open'     : '',
+      this.isDisabled ? 'is-disabled' : ''
+    ].join(' ');
+    // TODO: the user should be able to add handlers to events on the .vdom-select element
+    // Is there any reason to not make all DOM events for `.vdom-select` available for user?
     return m('.vdom-select', {
-      class: this.isOpen ? 'is-open' : null,
-      onclick: ()=> this.open(),
-      onkeydown: (this.isOpen ?
+      class: classes,
+      onclick:    this.isEnabled && (()=> this.open()),
+      onkeydown:  this.isEnabled && (this.isOpen ?
         (event => this.handleKeydownInPanel(event, options)) :
         (event => this.openViaKeyboard(event))
       ),
-      tabindex: 0
+      tabindex:   this.isEnabled && 0,
     }, [
       m('.opener', this.selectedOption.name || this.selectedOption.value),
       this.isOpen &&
