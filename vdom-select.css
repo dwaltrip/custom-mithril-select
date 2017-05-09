@@ -1,5 +1,27 @@
+/** LEGACY **/
 
 .vdom-select {
+  box-sizing: border-box;
+}
+.vdom-select * {
+  box-sizing: border-box;
+}
+.vdom-select.is-disabled {
+  opacity: .333;
+}
+.vdom-select .opener {
+  cursor: pointer;
+  width: 100%;
+}
+.vdom-select .option.is-selected::before {
+  content: "✔";
+  padding-right: 0.5em;
+}
+
+/** NON LEGACY **/
+
+.vdom-select {
+  position: relative;
   display: inline-block;
   font-size: 11px;
   font-family: system-ui, -apple-system;
@@ -36,6 +58,10 @@
   border: 1px solid rgba(170,170,170,0.6);
   box-shadow: 0px 1px 5px 1px rgba(0,0,0,0.3);
   border-radius: 4px;
+
+  /*max-height: 10.7em;*/
+  /*overflow-y: auto*/
+  /*overflow: hidden;*/
 }
 
 .vdom-select .opener {
@@ -56,6 +82,8 @@
   content: '';
   height: 12px;
   width: 8px;
+  /*  TODO: should I use an <img> tag for this instead?
+      Then I would only be using SVG one single way, which would make things eaiser. */
   background: url(assets/dropdown-arrows.svg);
   background-repeat: no-repeat;
   background-position: 0 0;
