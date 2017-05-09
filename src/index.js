@@ -129,9 +129,12 @@ export default {
         isSelected ? 'is-selected' : '',
         isTarget   ? 'is-target'   : ''
       ].join(' '),
+      // Selecting an <option> in a <select> does not trigger mouse events in parent elements
+      onmousedown: blockEvent,
+      onmouseup: blockEvent,
       onclick: event => {
-        this.selectOption(option);
         event.stopPropagation();
+        this.selectOption(option);
       },
       onmouseenter: ()=> { this.targetOption = option; }
     }, option.name || option.value);
